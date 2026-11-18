@@ -312,6 +312,42 @@
     }
   
     /* Olist project dashboard gallery and case-study highlights */
+     /* Olist KPI cards */
+.detail-kpis{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:12px;
+    margin:24px 0 30px;
+}
+
+.detail-kpi{
+    background:#eef2f6;
+    border:1px solid #dce2e8;
+    border-radius:14px;
+    padding:18px 14px;
+}
+
+.detail-kpi strong{
+    display:block;
+    font-family:"Space Grotesk";
+    font-size:27px;
+    letter-spacing:-.04em;
+    color:#173b68;
+}
+
+.detail-kpi span{
+    display:block;
+    margin-top:7px;
+    font-size:12px;
+    color:#59636e;
+    line-height:1.4;
+}
+
+@media(max-width:800px){
+    .detail-kpis{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+}
     .detail-description{white-space:pre-line;line-height:1.75}
     .detail-highlights-section{margin-top:26px}
     .detail-highlights-section h4{font-family:"Space Grotesk";font-size:25px;letter-spacing:-.04em}
@@ -329,7 +365,89 @@
       .detail-gallery{padding:9px;gap:12px}
       .detail-gallery-head{padding:10px 11px;font-size:12px}
     }
+/* =================================
+   OLIST — KEY FINDINGS CARDS
+================================= */
 
+.detail-highlights-section {
+  margin-top: 32px;
+}
+
+.detail-highlights-section h4 {
+  margin-bottom: 20px;
+}
+
+.detail-highlights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.finding-card {
+  position: relative;
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+  padding: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  background: rgba(148, 163, 184, 0.055);
+  transition: transform 0.25s ease, border-color 0.25s ease,
+              background 0.25s ease;
+}
+
+.finding-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(59, 130, 246, 0.055);
+}
+
+.finding-number {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.13);
+  color: #60a5fa;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.finding-content {
+  min-width: 0;
+}
+
+.finding-content h5 {
+  margin: 2px 0 10px;
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.finding-content p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+
+/* Mobile layout */
+
+@media (max-width: 700px) {
+  .detail-highlights {
+    grid-template-columns: 1fr;
+  }
+
+  .finding-card {
+    padding: 18px;
+  }
+}
   </style>
 </head>
 <body>
@@ -537,6 +655,7 @@
           <div class="detail-body">
             <h4>About this project</h4>
             <p id="detailDescription" class="detail-description"></p>
+            <div class="detail-kpis" id="detailKpis"></div>
             <div class="detail-highlights-section" id="detailHighlightsSection">
               <h4>Key analysis & findings</h4>
               <ul class="detail-highlights" id="detailHighlights"></ul>
@@ -594,6 +713,13 @@ The SQL investigation began with data-quality checks on order status and deliver
 
 The analysis then moved from overall late-delivery measurement to monthly purchase cohorts, customer-state comparisons, product-category analysis and seller-level investigation. A separate order-level review analysis evaluated how average customer review scores differed between late and on-time/early orders. The Power BI report presents the work through Executive Overview, Delivery Performance, Seller Performance and Customer Experience pages.`,
             tools:['MySQL','SQL Joins','CASE WHEN','COUNT DISTINCT','DATEDIFF','Power BI','DAX','Data Modeling','Data Visualization'],
+            kpis:[
+    {value:'99,441',label:'Total Orders'},
+    {value:'93.23%',label:'On-Time Delivery'},
+    {value:'6.77%',label:'Late Delivery'},
+    {value:'12.50',label:'Average Delivery Days'},
+    {value:'4.16/5',label:'Average Review Score'}
+],
             highlights:[
               'Executive Overview: 99,441 total orders; 96,470 eligible delivered orders; 89,936 on-time/early orders; 6,534 late orders; 93.23% on-time delivery and 6.77% late delivery. The report shows an average delivery time of 12.50 days.',
               'Data quality: 8 orders marked as delivered had no customer-delivery timestamp. All 8 had order-item records and 7 had review records. Separately, 6 of 625 canceled orders (0.96%) had a recorded customer-delivery timestamp; these were documented as anomalies for further investigation.',
@@ -701,10 +827,34 @@ The finished report gives stakeholders a consistent, interactive way to investig
       detailKicker.textContent=project.type + ' / PROJECT';
       detailTitle.textContent=project.title;
       detailDescription.textContent=project.description;
+      const kpiContainer = document.getElementById('detailKpis');
+
+if (kpiContainer) {
+    kpiContainer.innerHTML = (project.kpis || []).map(kpi => `
+        <div class="detail-kpi">
+            <strong>${kpi.value}</strong>
+            <span>${kpi.label}</span>
+        </div>
+    `).join('');
+}
       detailMeta.innerHTML=project.tools.map(tool=>`<span class="detail-chip">${tool}</span>`).join('');
       const highlightsSection=document.getElementById('detailHighlightsSection');
       const highlightsList=document.getElementById('detailHighlights');
-      highlightsList.innerHTML=(project.highlights || []).map(item=>`<li>${item}</li>`).join('');
+      highlightsList.innerHTML = (project.highlights || []).map((item, index) => {
+  const separator = item.indexOf(':');
+  const heading = separator > -1 ? item.slice(0, separator) : 'Key Finding';
+  const description = separator > -1 ? item.slice(separator + 1).trim() : item;
+
+  return `
+    <li class="finding-card">
+      <span class="finding-number">${String(index + 1).padStart(2, '0')}</span>
+      <div class="finding-content">
+        <h5>${heading}</h5>
+        <p>${description}</p>
+      </div>
+    </li>
+  `;
+}).join('');
       highlightsSection.style.display=(project.highlights && project.highlights.length) ? 'block' : 'none';
       detailLinks.innerHTML='';
       let hasProjectLink=false;
